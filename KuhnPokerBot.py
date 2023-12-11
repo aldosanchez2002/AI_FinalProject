@@ -1,87 +1,43 @@
-'''
-Class Name: KuhnPokerBot
-Attributes:
-    Initialization:
-        - The bot should be initialized with a player name.
-
-    Observing Opponent's Card:
-        - The bot should have a method `observe_card(opponent_card)` to update its internal model based on the card observed from the opponent.
-
-    Observing Opponent's Action:
-        - The bot should have a method `observe_action(opponent_action)` to update its internal model based on the action observed from the opponent (check/fold or bet).
-
-    Making Betting Decision:
-        - The bot should have a method `make_bet()` to make a betting decision based on its internal model.
-        - The method should return an integer representing the betting decision (0 for check/fold, 1 for bet).
-
-    Evaluating Hand Strength:
-        - The bot should have a method `evaluate_hand_strength()` to evaluate the strength of its current hand based on the internal model.
-        - The method should return a float value between 0 and 1, representing the strength of the bot's hand.
-'''
-import random
+import numpy as np
 
 class KuhnPokerBot:
     def __init__(self, player_name):
-        '''
-        Initialize the Kuhn Poker bot.
-
-        Parameters:
-        - player_name (str): The name of the bot player.
-        '''
         self.player_name = player_name
-        self.opponent_card = None
-        self.opponent_action = None
-        self.hand_strength = None
 
-    def observe_card(self, opponent_card):
-        '''
-        Observe the opponent's card.
+        # Prior probabilities for opponent's card and action
+        self.prior_opponent_card = np.ones(3) / 3  # Assuming 3 possible cards
+        self.prior_opponent_action = np.ones(2) / 2  # Assuming 2 possible actions (check/fold or bet)
 
-        Parameters:
-        - opponent_card (int): The card observed in the opponent's hand.
-        '''
-        self.opponent_card = opponent_card
+    def observe_card(self, observed_card):
+        # Update opponent's card probability distribution using Bayes' theorem
+        likelihood = self.calculate_likelihood(observed_card, self.prior_opponent_card)
+        self.prior_opponent_card = self.update_posterior(self.prior_opponent_card, likelihood)
 
-    def observe_action(self, opponent_action):
-        '''
-        Observe the opponent's action.
 
-        Parameters:
-        - opponent_action (int): The action taken by the opponent (0 for check/fold, 1 for bet).
-        '''
-        self.opponent_action = opponent_action
+    def observe_action(self, observed_action):
+        # Update opponent's action probability distribution using Bayes' theorem
+        likelihood = self.calculate_likelihood(observed_action, self.prior_opponent_action)
+        self.prior_opponent_action = self.update_posterior(self.prior_opponent_action, likelihood)
+
+    def calculate_likelihood(self, observed_data, prior_distribution):
+        # Placeholder function to calculate the likelihood based on observed data
+        # You should customize this based on your specific model
+        return np.ones_like(prior_distribution) / len(prior_distribution)
+
+    def update_posterior(self, prior_distribution, likelihood):
+        # Placeholder function to update the posterior distribution using Bayes' theorem
+        # You should customize this based on your specific update mechanism
+        posterior_distribution = prior_distribution * likelihood
+        posterior_distribution /= posterior_distribution.sum()
+        return posterior_distribution
 
     def make_bet(self):
-        '''
-        Make a betting decision based on probabilistic reasoning.
-
-        Returns:
-        - int: The bot's betting decision (0 for check/fold, 1 for bet).
-        '''
-        # Use probabilistic reasoning based on opponent's card and actions
-        if self.opponent_card == 1:
-            # Example: higher probability to bet if opponent often bluffs
-            if self.opponent_action == 1 and random.random() < 0.8:
-                return 1
-            else:
-                return 0
-        else:
-            # Example: higher probability to bet if opponent often bluffs
-            if self.opponent_action == 1 and random.random() < 0.2:
-                return 1
-            else:
-                return 0
+        # Use updated probability distributions for decision making
+        # Implement your decision-making logic here
+        # For example, you might compare the probabilities and make a decision
+        bet_probability = self.prior_opponent_action[1] / self.prior_opponent_action.sum()
+        return int(bet_probability > np.random.rand())
 
     def evaluate_hand_strength(self):
-        '''
-        Evaluate the strength of the bot's hand based on probabilistic reasoning.
-
-        Returns:
-        - float: A value representing the estimated hand strength.
-        '''
-        # Use probabilistic reasoning to evaluate hand strength
-        # Example: assign probabilities based on the opponent's card
-        if self.opponent_card == 1:
-            return random.uniform(0.7, 1.0)  # Adjust based on your strategy
-        else:
-            return random.uniform(0.0, 0.3)  # Adjust based on your strategy
+        weights = np.array([0.8, 0.5, 0.2])
+        return np.dot(weights, self.prior_opponent_card)
